@@ -38,7 +38,7 @@ jobs:
           - "ubi8-16.1-0"
     
     runs-on: 
-      - homelab-docker
+      - cdpgvectors
     steps:
       - name: install git
         run: |

@@ -1,4 +1,4 @@
-ARG ALPINE_VERSION=3.19.0
+ARG ALPINE_VERSION=3.19.1
 ARG CRUNCHYDATA_VERSION
 ARG PG_MAJOR
 
@@ -11,9 +11,9 @@ WORKDIR /tmp
 ARG PG_MAJOR
 ARG TARGETARCH
 # renovate: datasource=github-releases depName=tensorchord/pgvecto.rs
-ARG PGVECTORS_TAG=v0.1.11
+ARG PGVECTORS_TAG=v0.2.0
 
-RUN curl --fail -o pgvectors.deb -sSL https://github.com/tensorchord/pgvecto.rs/releases/download/${PGVECTORS_TAG}/vectors-pg${PG_MAJOR}-${PGVECTORS_TAG}-$(uname -m)-unknown-linux-gnu.deb && \
+RUN curl --fail -o pgvectors.deb -sSL https://github.com/tensorchord/pgvecto.rs/releases/download/${PGVECTORS_TAG}/vectors-pg${PG_MAJOR}_${PGVECTORS_TAG:1}_$(uname -m).deb && \
     alien -r pgvectors.deb && \
     rm -f pgvectors.deb
 

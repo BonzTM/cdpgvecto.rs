@@ -4,13 +4,12 @@ on:
   push:
     branches:
       - main
-    paths:
-      - .github/workflows/build_cdpgvectors_custom_image.yaml
-      - apps/mgmt/pgo/custom-image/Dockerfile
-  # pull_request:
-  #   branches: [ 'main' ]
-  # release:
-  #   types: [ published ]
+  pull_request:
+    branches:
+      - main
+  release:
+    types:
+      - published
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -76,7 +75,7 @@ jobs:
         uses: tj-actions/changed-files@v40
         with:
           files: |
-            apps/mgmt/pgo/custom-image/Dockerfile
+            Dockerfile
 
       - name: Determine image push
         uses: actions/github-script@v7

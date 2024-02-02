@@ -22,9 +22,8 @@ permissions:
   contents: read
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/cdpgvecto.rs
-  DOCKERHUB_REPO: bonztm/cdpgvecto.rs
+  GHCR_REPO: ghcr.io/${{ github.repository_owner }}/cdpgvecto.rs
+  DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_USER }}/cdpgvecto.rs
 
 jobs:
   postgres:
@@ -107,7 +106,7 @@ jobs:
           flavor: |
             latest=false
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.GHCR_REPO }}
             ${{ env.DOCKERHUB_REPO }}
           tags: |
             type=ref,event=pr

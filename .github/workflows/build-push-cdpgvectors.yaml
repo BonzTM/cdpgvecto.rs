@@ -25,7 +25,7 @@ env:
   DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_USER }}/cdpgvecto.rs
 
 jobs:
-  postgres:
+  build-push-cdpgvectors:
     strategy:
       fail-fast: false
       matrix:

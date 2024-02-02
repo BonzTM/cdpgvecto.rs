@@ -106,9 +106,9 @@ jobs:
         with:
           flavor: |
             latest=false
-          images: 
-            - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-            - ${{ env.DOCKERHUB_REPO }}
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.DOCKERHUB_REPO }}
           tags: |
             type=ref,event=pr
             type=raw,value=${{ matrix.versions }}-${{ env.PGVECTORS_TAG }},enable=${{ steps.should-release.outputs.result }}

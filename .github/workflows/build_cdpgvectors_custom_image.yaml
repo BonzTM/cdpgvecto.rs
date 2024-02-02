@@ -82,7 +82,7 @@ jobs:
         id: should-release
         with:
           script: |
-            return "true"
+            return true
           # script: |
           #   if (context.eventName == "pull_request") return false;
           #   return "${{ steps.changed-version.outputs.any_changed }}" == "true";

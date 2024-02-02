@@ -15,10 +15,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# # Sets permissions of the GITHUB_TOKEN
-# permissions:
-#   packages: write
-#   contents: read
+# Sets permissions of the GITHUB_TOKEN
+permissions:
+  packages: write
+  contents: read
 
 env:
   GHCR_REPO: ghcr.io/${{ github.repository_owner }}/cdpgvecto.rs
@@ -82,10 +82,8 @@ jobs:
         id: should-release
         with:
           script: |
-            return true
-          # script: |
-          #   if (context.eventName == "pull_request") return false;
-          #   return "${{ steps.changed-version.outputs.any_changed }}" == "true";
+            if (context.eventName == "pull_request") return false;
+            return "${{ steps.changed-version.outputs.any_changed }}" == "true";
 
       - name: Set Postgres Version
         id: version

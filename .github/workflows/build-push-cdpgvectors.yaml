@@ -2,11 +2,14 @@ name: Build Image and Push
 
 on:
   push:
-    branches: [ 'main' ]
+    branches:
+      - main
   pull_request:
-    branches: [ 'main' ]
+    branches:
+      - main
   release:
-    types: [ published ]
+    types:
+      - published
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,11 +21,11 @@ permissions:
   contents: read
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/cdpgvecto.rs
+  GHCR_REPO: ghcr.io/${{ github.repository_owner }}/cdpgvecto.rs
+  DOCKERHUB_REPO: ${{ secrets.DOCKERHUB_USER }}/cdpgvecto.rs
 
 jobs:
-  postgres:
+  build-push-cdpgvectors:
     strategy:
       fail-fast: false
       matrix:
@@ -34,15 +37,25 @@ jobs:
           # renovate: datasource=docker depName=registry.developers.crunchydata.com/crunchydata/crunchy-postgres
           - "ubi8-16.1-0"
     
-    runs-on: ubuntu-latest
+    runs-on: 
+      - cdpgvectors
     steps:
+      - name: install git
+        run: |
+          sudo apt update && sudo apt install git -y
+
       - uses: actions/checkout@v4
+    
+      - name: Create docker context
+        run: |
+          docker context create cdpgvectors
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        with:
+          endpoint: cdpgvectors
+          driver-opts: |
+            image=harbor.mgmt.wells.gg/docker-proxy/moby/buildkit:master
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -51,11 +64,18 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Determine version change
         id: changed-version
         uses: tj-actions/changed-files@v40
         with:
-          files: Dockerfile
+          files: |
+            Dockerfile
 
       - name: Determine image push
         uses: actions/github-script@v7
@@ -84,7 +104,9 @@ jobs:
         with:
           flavor: |
             latest=false
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: |
+            ${{ env.GHCR_REPO }}
+            ${{ env.DOCKERHUB_REPO }}
           tags: |
             type=ref,event=pr
             type=raw,value=${{ matrix.versions }}-${{ env.PGVECTORS_TAG }},enable=${{ steps.should-release.outputs.result }}
@@ -96,7 +118,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: ${{ !github.event.pull_request.head.repo.fork && steps.metadata.outputs.tags != '' }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           cache-from: type=gha
@@ -105,3 +127,17 @@ jobs:
           build-args: |
             PG_MAJOR=${{ steps.version.outputs.PG_MAJOR }}
             CRUNCHYDATA_VERSION=${{ matrix.versions }}
+
+      - name: Remove docker context
+        if: always()
+        run: docker context rm cdpgvectors
+
+      - name: Update Dockerhub Description
+        if: ${{ !github.event.pull_request.head.repo.fork && steps.metadata.outputs.tags != '' }}
+        uses: peter-evans/dockerhub-description@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.DOCKERHUB_REPO }}
+          readme-filepath: README.md
+          short-description: ${{ github.event.repository.description }}
